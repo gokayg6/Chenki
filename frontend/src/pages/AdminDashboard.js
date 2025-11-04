@@ -192,14 +192,15 @@ const AdminDashboard = ({ user }) => {
           {/* Products Tab */}
           <TabsContent value="products">
             <div className="flex justify-end mb-6">
-              <Button
+              <GlassButton
                 data-testid="add-product-btn"
                 onClick={handleNewProduct}
-                className="bg-[#8b4513] hover:bg-[#654321] text-white"
+                variant="primary"
+                icon={<Plus className="h-5 w-5" />}
+                className="scale-in"
               >
-                <Plus className="h-5 w-5 mr-2" />
                 Add Product
-              </Button>
+              </GlassButton>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
