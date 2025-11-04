@@ -154,19 +154,30 @@ const AdminDashboard = ({ user }) => {
   };
 
   return (
-    <div className="min-h-screen pb-20">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-[#8b4513]/10">
+    <div className="min-h-screen pb-20 page-enter">
+      {/* Enhanced Header with Glass Effect */}
+      <header className="glass-effect sticky top-0 z-50 border-b border-[#8b4513]/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link to="/" className="inline-flex items-center text-[#8b4513] hover:text-[#654321]">
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Back to Store
-          </Link>
+          <div className="flex items-center justify-between">
+            <GlassButton 
+              onClick={() => navigate('/')} 
+              variant="light"
+              icon={<Home className="h-5 w-5" />}
+              className="fade-in-up"
+              data-testid="back-to-home-btn"
+            >
+              Back to Home
+            </GlassButton>
+            
+            <h2 className="text-xl font-semibold text-[#8b4513] fade-in-up" style={{ fontFamily: 'Cormorant Garamond, serif', animationDelay: '0.1s' }}>
+              Admin Panel
+            </h2>
+          </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 fade-in-up" style={{ animationDelay: '0.2s' }}>
           <h1 className="text-4xl lg:text-5xl font-bold text-[#8b4513]" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
             Admin Dashboard
           </h1>
