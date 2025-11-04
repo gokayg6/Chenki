@@ -91,14 +91,17 @@ const Register = ({ setUser }) => {
               />
             </div>
 
-            <Button
+            <GlassButton
               data-testid="register-btn"
               type="submit"
               disabled={loading}
-              className="w-full bg-[#8b4513] hover:bg-[#654321] text-white py-6 text-lg"
+              variant="primary"
+              icon={<UserPlus className="h-5 w-5" />}
+              className="w-full py-6 text-lg elastic-bounce"
+              style={{ animationDelay: '0.3s' }}
             >
               {loading ? 'Creating account...' : 'Register'}
-            </Button>
+            </GlassButton>
           </form>
 
           <div className="mt-6 text-center">
