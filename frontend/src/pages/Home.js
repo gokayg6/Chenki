@@ -107,41 +107,41 @@ const Home = ({ user }) => {
               <h1 className="text-4xl font-bold text-[#8b4513]" style={{ fontFamily: 'Cormorant Garamond, serif' }}>Chenki</h1>
             </Link>
             
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-3">
               {user ? (
                 <>
                   <Link to="/cart" data-testid="cart-link">
-                    <Button variant="ghost" size="icon" className="relative">
+                    <Button variant="ghost" size="icon" className="relative hover:bg-[#8b4513]/10 transition-all duration-300">
                       <ShoppingCart className="h-5 w-5 text-[#8b4513]" />
                     </Button>
                   </Link>
                   <Link to="/account" data-testid="account-link">
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="hover:bg-[#8b4513]/10 transition-all duration-300">
                       <User className="h-5 w-5 text-[#8b4513]" />
                     </Button>
                   </Link>
                   {user.is_admin && (
                     <Link to="/admin" data-testid="admin-link">
-                      <Button variant="outline" className="border-[#8b4513] text-[#8b4513]">
-                        Admin Dashboard
-                      </Button>
+                      <GlassButton variant="light" icon={<Settings className="h-4 w-4" />} className="text-sm">
+                        Admin
+                      </GlassButton>
                     </Link>
                   )}
-                  <Button variant="ghost" size="icon" onClick={handleLogout} data-testid="logout-btn">
+                  <Button variant="ghost" size="icon" onClick={handleLogout} data-testid="logout-btn" className="hover:bg-red-50 transition-all duration-300">
                     <LogOut className="h-5 w-5 text-[#8b4513]" />
                   </Button>
                 </>
               ) : (
                 <>
                   <Link to="/login" data-testid="login-link">
-                    <Button variant="outline" className="border-[#8b4513] text-[#8b4513]">
+                    <GlassButton variant="light" icon={<LogIn className="h-4 w-4" />} className="text-sm">
                       Login
-                    </Button>
+                    </GlassButton>
                   </Link>
                   <Link to="/register" data-testid="register-link">
-                    <Button className="bg-[#8b4513] hover:bg-[#654321] text-white">
+                    <GlassButton variant="primary" icon={<UserPlus className="h-4 w-4" />} className="text-sm">
                       Register
-                    </Button>
+                    </GlassButton>
                   </Link>
                 </>
               )}
