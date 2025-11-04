@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ShoppingCart, User, Search, Filter, LogOut, Mail, Info } from 'lucide-react';
+import { ShoppingCart, User, Search, Filter, LogOut, Mail, Info, UserPlus, LogIn, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BubbleBackground from '@/components/BubbleBackground';
+import GlassButton from '@/components/GlassButton';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
