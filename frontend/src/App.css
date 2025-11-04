@@ -193,6 +193,7 @@ h1, h2, h3, h4, h5, h6 {
   background: #8b4513;
   transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: -1;
+  pointer-events: none;
 }
 
 .btn-secondary:hover::before {
