@@ -479,6 +479,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def create_default_admin():
+    """Create default admin user if it doesn't exist"""
+    admin_email = "admin@chenki.com"
+    existing_admin = await db.users.find_one({"email": admin_email})
+    
+    if not existing_admin:
+        admin_user = User(
+            email=admin_email,
+            name="Admin",
+            password_hash=get_password_hash("admin123"),
+            is_admin=True
+        )
+        
+        doc = admin_user.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        await db.users.insert_one(doc)
+        logger.info(f"Default admin user created: {admin_email}")
+    else:
+        logger.info(f"Admin user already exists: {admin_email}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
