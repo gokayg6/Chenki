@@ -124,20 +124,24 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Luxury Button Styles with Advanced Animations */
+/* iOS-Inspired Glassmorphism Button Styles */
 .btn-primary {
-  background: linear-gradient(135deg, #8b4513 0%, #654321 100%);
+  background: rgba(139, 69, 19, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   color: #faf7f2;
   padding: 0.875rem 2rem;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   font-size: 0.95rem;
   font-weight: 500;
   letter-spacing: 0.5px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(139, 69, 19, 0.2);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(139, 69, 19, 0.25),
+              0 8px 32px rgba(0, 0, 0, 0.12),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .btn-primary::before {
@@ -148,9 +152,10 @@ h1, h2, h3, h4, h5, h6 {
   width: 0;
   height: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
   transform: translate(-50%, -50%);
-  transition: width 0.6s ease, height 0.6s ease;
+  transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              height 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   pointer-events: none;
 }
 
@@ -160,13 +165,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(139, 69, 19, 0.35);
+  transform: translateY(-2px) scale(1.02);
+  background: rgba(139, 69, 19, 0.95);
+  box-shadow: 0 6px 20px rgba(139, 69, 19, 0.35),
+              0 12px 40px rgba(0, 0, 0, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .btn-primary:active {
-  transform: translateY(-1px) scale(0.98);
+  transform: translateY(0) scale(0.98);
   transition: all 0.1s ease;
+  box-shadow: 0 2px 8px rgba(139, 69, 19, 0.3),
+              inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-secondary {
