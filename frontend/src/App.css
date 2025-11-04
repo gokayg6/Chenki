@@ -264,6 +264,7 @@ h1, h2, h3, h4, h5, h6 {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   transition: left 0.7s ease;
   z-index: 1;
+  pointer-events: none;
 }
 
 .product-image-container:hover::before {
