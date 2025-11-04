@@ -385,24 +385,68 @@ h1, h2, h3, h4, h5, h6 {
   animation: pulse 2s ease-in-out infinite;
 }
 
-/* Elastic Bounce */
+/* Elastic Bounce - iOS Spring Animation */
 @keyframes elasticBounce {
   0% {
-    transform: scale(0);
+    transform: scale(0) translateY(20px);
+    opacity: 0;
   }
   50% {
-    transform: scale(1.1);
+    transform: scale(1.08) translateY(-5px);
   }
   75% {
+    transform: scale(0.95) translateY(2px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.elastic-bounce {
+  animation: elasticBounce 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* iOS Spring Bounce for Buttons */
+@keyframes springBounce {
+  0% {
+    transform: scale(1);
+  }
+  20% {
     transform: scale(0.95);
+  }
+  40% {
+    transform: scale(1.05);
+  }
+  60% {
+    transform: scale(0.98);
+  }
+  80% {
+    transform: scale(1.02);
   }
   100% {
     transform: scale(1);
   }
 }
 
-.elastic-bounce {
-  animation: elasticBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+.spring-bounce {
+  animation: springBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* iOS Fade Slide Up */
+@keyframes iosFadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ios-fade-slide {
+  animation: iosFadeSlideUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Floating Animation for Icons */
