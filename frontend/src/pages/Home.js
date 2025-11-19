@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ShoppingCart, User, Search, Filter, LogOut, Mail, Info, UserPlus, LogIn, Settings } from 'lucide-react';
+import { ShoppingCart, User, Search, Filter, LogOut, Mail, Info, UserPlus, LogIn, Settings, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BubbleBackground from '@/components/BubbleBackground';
 import GlassButton from '@/components/GlassButton';
+import { getImageUrl } from '@/lib/utils';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:8000";
 const API = `${BACKEND_URL}/api`;
 
 const Home = ({ user }) => {
@@ -77,7 +78,13 @@ const Home = ({ user }) => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(
+      if (!token) {
+        toast.error('Please login to add items to cart');
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.post(
         `${API}/cart`,
         {
           product_id: product.id,
@@ -85,13 +92,34 @@ const Home = ({ user }) => {
           price: product.price
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
       );
-      toast.success('Added to cart successfully');
+      
+      if (response.data) {
+        toast.success('Added to cart successfully');
+      }
     } catch (error) {
       console.error('Error adding to cart:', error);
-      toast.error('Failed to add to cart');
+      if (error.response) {
+        // Backend'den gelen hata mesajı
+        const errorMsg = error.response.data?.detail || error.response.data?.message || 'Failed to add to cart';
+        toast.error(errorMsg);
+        if (error.response.status === 401) {
+          // Token geçersiz, login'e yönlendir
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          navigate('/login');
+        }
+      } else if (error.request) {
+        // İstek gönderildi ama yanıt alınamadı
+        toast.error('Cannot connect to server. Please check if backend is running.');
+      } else {
+        toast.error('Failed to add to cart. Please try again.');
+      }
     }
   };
 
@@ -110,6 +138,11 @@ const Home = ({ user }) => {
             <div className="flex items-center space-x-3">
               {user ? (
                 <>
+                  <Link to="/orders" data-testid="track-link" title="Track Order">
+                    <Button variant="ghost" size="icon" className="hover:bg-[#8b4513]/10 transition-all duration-300">
+                      <Truck className="h-5 w-5 text-[#8b4513]" />
+                    </Button>
+                  </Link>
                   <Link to="/cart" data-testid="cart-link">
                     <Button variant="ghost" size="icon" className="relative hover:bg-[#8b4513]/10 transition-all duration-300">
                       <ShoppingCart className="h-5 w-5 text-[#8b4513]" />
@@ -259,7 +292,7 @@ const Home = ({ user }) => {
                 <Link to={`/product/${product.id}`}>
                   <div className="aspect-square overflow-hidden bg-gray-100 product-image-container">
                     <img
-                      src={product.image_url}
+                      src={getImageUrl(product.image_url)}
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />

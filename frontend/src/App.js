@@ -7,6 +7,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Account from "./pages/Account";
 import Orders from "./pages/Orders";
+import Tracking from "./pages/Tracking";
 import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -48,6 +49,7 @@ function App() {
           <Route path="/checkout" element={<ProtectedRoute><Checkout user={user} /></ProtectedRoute>} />
           <Route path="/account" element={<ProtectedRoute><Account user={user} setUser={setUser} /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders user={user} /></ProtectedRoute>} />
+          <Route path="/tracking/:trackingNumber" element={<Tracking />} />
           <Route path="/admin" element={<ProtectedRoute adminOnly={true}><AdminDashboard user={user} /></ProtectedRoute>} />
           <Route path="/login" element={<Login setUser={setUser} />} />
           <Route path="/register" element={<Register setUser={setUser} />} />

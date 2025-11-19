@@ -4,8 +4,9 @@ import axios from 'axios';
 import { ShoppingCart, ArrowLeft, Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { getImageUrl } from '@/lib/utils';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:8000";
 const API = `${BACKEND_URL}/api`;
 
 const ProductDetail = ({ user }) => {
@@ -40,7 +41,13 @@ const ProductDetail = ({ user }) => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(
+      if (!token) {
+        toast.error('Please login to add items to cart');
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.post(
         `${API}/cart`,
         {
           product_id: product.id,
@@ -48,14 +55,35 @@ const ProductDetail = ({ user }) => {
           price: product.price
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
       );
-      toast.success('Added to cart successfully');
-      navigate('/cart');
+      
+      if (response.data) {
+        toast.success('Added to cart successfully');
+        navigate('/cart');
+      }
     } catch (error) {
       console.error('Error adding to cart:', error);
-      toast.error('Failed to add to cart');
+      if (error.response) {
+        // Backend'den gelen hata mesajı
+        const errorMsg = error.response.data?.detail || error.response.data?.message || 'Failed to add to cart';
+        toast.error(errorMsg);
+        if (error.response.status === 401) {
+          // Token geçersiz, login'e yönlendir
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          navigate('/login');
+        }
+      } else if (error.request) {
+        // İstek gönderildi ama yanıt alınamadı
+        toast.error('Cannot connect to server. Please check if backend is running.');
+      } else {
+        toast.error('Failed to add to cart. Please try again.');
+      }
     }
   };
 
@@ -93,7 +121,7 @@ const ProductDetail = ({ user }) => {
           <div className="luxury-card rounded-lg overflow-hidden">
             <div className="aspect-square">
               <img
-                src={product.image_url}
+                src={getImageUrl(product.image_url)}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />

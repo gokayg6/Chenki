@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import BubbleBackground from '@/components/BubbleBackground';
 import GlassButton from '@/components/GlassButton';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:8000";
 const API = `${BACKEND_URL}/api`;
 
 const Register = ({ setUser }) => {

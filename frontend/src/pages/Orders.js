@@ -1,20 +1,34 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Package } from 'lucide-react';
+import { ArrowLeft, Package, Truck, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:8000";
 const API = `${BACKEND_URL}/api`;
 
 const Orders = ({ user }) => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [shippingInfo, setShippingInfo] = useState({});
 
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    // Fetch shipping info for all orders
+    if (orders.length > 0) {
+      orders.forEach(order => {
+        if (order.status === 'shipped' || order.status === 'delivered') {
+          fetchShippingInfo(order.id);
+        }
+      });
+    }
+  }, [orders]);
 
   const fetchOrders = async () => {
     try {
@@ -28,6 +42,28 @@ const Orders = ({ user }) => {
       console.error('Error fetching orders:', error);
       toast.error('Failed to load orders');
       setLoading(false);
+    }
+  };
+
+  const fetchShippingInfo = async (orderId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/shipping/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShippingInfo(prev => ({ ...prev, [orderId]: response.data }));
+    } catch (error) {
+      // Shipping info might not exist yet
+      console.log('Shipping info not found for order:', orderId);
+    }
+  };
+
+  const handleTrackOrder = (orderId) => {
+    const shipping = shippingInfo[orderId];
+    if (shipping && shipping.tracking_number) {
+      navigate(`/tracking/${shipping.tracking_number}`);
+    } else {
+      toast.error('Tracking information not available yet');
     }
   };
 
@@ -113,7 +149,25 @@ const Orders = ({ user }) => {
                       <span className="text-sm font-mono text-gray-500">{order.payment_id}</span>
                     </div>
                   )}
+                  {shippingInfo[order.id] && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Tracking Number</span>
+                      <span className="text-sm font-mono text-gray-500">{shippingInfo[order.id].tracking_number}</span>
+                    </div>
+                  )}
                 </div>
+                {(order.status === 'shipped' || order.status === 'delivered' || shippingInfo[order.id]) && (
+                  <div className="mt-4 pt-4 border-t border-[#8b4513]/10">
+                    <Button
+                      onClick={() => handleTrackOrder(order.id)}
+                      className="w-full bg-[#8b4513] hover:bg-[#654321] text-white"
+                      data-testid={`track-order-${order.id}`}
+                    >
+                      <Truck className="h-4 w-4 mr-2" />
+                      Track Order
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

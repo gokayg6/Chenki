@@ -10,8 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import GlassButton from '@/components/GlassButton';
+import { getImageUrl } from '@/lib/utils';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:8000";
 const API = `${BACKEND_URL}/api`;
 
 const AdminDashboard = ({ user }) => {
@@ -206,7 +207,7 @@ const AdminDashboard = ({ user }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((product) => (
                 <div key={product.id} className="luxury-card rounded-lg overflow-hidden" data-testid={`product-${product.id}`}>
-                  <img src={product.image_url} alt={product.name} className="w-full h-48 object-cover" />
+                  <img src={getImageUrl(product.image_url)} alt={product.name} className="w-full h-48 object-cover" />
                   <div className="p-6">
                     <h3 className="text-xl font-semibold text-[#8b4513] mb-2">{product.name}</h3>
                     <p className="text-sm text-gray-600 mb-2 line-clamp-2">{product.description}</p>

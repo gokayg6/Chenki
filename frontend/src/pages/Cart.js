@@ -4,8 +4,9 @@ import axios from 'axios';
 import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { getImageUrl } from '@/lib/utils';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:8000";
 const API = `${BACKEND_URL}/api`;
 
 const Cart = ({ user }) => {
@@ -21,8 +22,16 @@ const Cart = ({ user }) => {
   const fetchCart = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      
       const response = await axios.get(`${API}/cart`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       setCart(response.data);
       
@@ -30,14 +39,24 @@ const Cart = ({ user }) => {
       const productIds = response.data.items?.map(item => item.product_id) || [];
       const productData = {};
       for (const id of productIds) {
-        const prod = await axios.get(`${API}/products/${id}`);
-        productData[id] = prod.data;
+        try {
+          const prod = await axios.get(`${API}/products/${id}`);
+          productData[id] = prod.data;
+        } catch (err) {
+          console.error(`Error fetching product ${id}:`, err);
+        }
       }
       setProducts(productData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching cart:', error);
-      toast.error('Failed to load cart');
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+      } else {
+        toast.error('Failed to load cart');
+      }
       setLoading(false);
     }
   };
@@ -45,16 +64,32 @@ const Cart = ({ user }) => {
   const updateQuantity = async (productId, newQuantity) => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      
       await axios.put(
         `${API}/cart/${productId}?quantity=${newQuantity}`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
       );
       fetchCart();
       toast.success('Cart updated');
     } catch (error) {
       console.error('Error updating cart:', error);
-      toast.error('Failed to update cart');
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+      } else {
+        toast.error('Failed to update cart');
+      }
     }
   };
 
@@ -121,7 +156,7 @@ const Cart = ({ user }) => {
                   <div key={item.product_id} className="luxury-card rounded-lg p-6" data-testid={`cart-item-${item.product_id}`}>
                     <div className="flex items-center space-x-6">
                       <img
-                        src={product.image_url}
+                        src={getImageUrl(product.image_url)}
                         alt={product.name}
                         className="w-24 h-24 object-cover rounded"
                       />

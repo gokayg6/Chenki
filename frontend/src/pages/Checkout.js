@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:8000";
 const API = `${BACKEND_URL}/api`;
 
 const Checkout = ({ user }) => {
@@ -36,13 +36,27 @@ const Checkout = ({ user }) => {
   const fetchCart = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      
       const response = await axios.get(`${API}/cart`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       setCart(response.data);
     } catch (error) {
       console.error('Error fetching cart:', error);
-      toast.error('Failed to load cart');
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+      } else {
+        toast.error('Failed to load cart');
+      }
     }
   };
 
@@ -56,6 +70,10 @@ const Checkout = ({ user }) => {
 
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
       
       // Create order first
       const orderResponse = await axios.post(
@@ -70,7 +88,12 @@ const Checkout = ({ user }) => {
             identity_number: '11111111111'
           }
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
       );
 
       // Process payment
@@ -80,7 +103,12 @@ const Checkout = ({ user }) => {
           order_id: orderResponse.data.id,
           ...cardDetails
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
       );
 
       if (paymentResponse.data.success) {
@@ -91,7 +119,14 @@ const Checkout = ({ user }) => {
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error(error.response?.data?.detail || 'Checkout failed');
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+      } else {
+        const errorMsg = error.response?.data?.detail || error.response?.data?.message || 'Checkout failed';
+        toast.error(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
