@@ -18,6 +18,9 @@ from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFi
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request as StarletteRequest
+from starlette.responses import Response
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -1163,13 +1166,57 @@ app = FastAPI(
 # Include API router
 app.include_router(api_router)
 
-# CORS Middleware
+# Security Headers Middleware - Optimized for all devices and production
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: StarletteRequest, call_next):
+        response = await call_next(request)
+        
+        # Security headers for all devices
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        
+        # Performance headers
+        response.headers["Connection"] = "keep-alive"
+        
+        return response
+
+# Add security headers middleware (before CORS)
+app.add_middleware(SecurityHeadersMiddleware)
+
+# CORS Configuration - Optimized for https://chenki-hrra.vercel.app/ and all devices
+def get_cors_origins():
+    """Get CORS origins from environment or use defaults"""
+    cors_env = os.environ.get('CORS_ORIGINS')
+    if cors_env:
+        return [origin.strip() for origin in cors_env.split(',') if origin.strip()]
+    
+    # Default origins: production frontend and local development
+    default_origins = [
+        "https://chenki-hrra.vercel.app",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ]
+    
+    # In production, allow all subdomains of vercel.app for flexibility
+    if IS_VERCEL:
+        default_origins.append("https://*.vercel.app")
+    
+    return default_origins
+
+# CORS Middleware - Optimized for all devices
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=get_cors_origins(),
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Allow all Vercel subdomains
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 
 # Mount static files for uploads (Vercel'de çalışmaz)
@@ -1179,13 +1226,40 @@ if not IS_VERCEL:
 # Root endpoint
 @app.get("/")
 async def root():
-    """Root endpoint"""
+    """Root endpoint - Optimized for https://chenki-hrra.vercel.app/"""
     return {
         "message": "E-Commerce API",
         "version": "1.0.0",
-        "docs": "/docs"
+        "docs": "/docs",
+        "frontend_url": "https://chenki-hrra.vercel.app/",
+        "status": "operational",
+        "cors_enabled": True,
+        "accessibility": "All devices supported"
+    }
+
+# Health check endpoint - Optimized for monitoring and all devices
+@app.get("/health")
+@app.get("/ping")
+async def health_check():
+    """Health check endpoint for monitoring"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "frontend_url": "https://chenki-hrra.vercel.app/",
+        "api_version": "1.0.0"
     }
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Run on all interfaces (0.0.0.0) to allow access from all devices
+    # This allows the backend to be accessible from:
+    # - Localhost: http://localhost:8000 or http://127.0.0.1:8000
+    # - Network devices: http://[your-ip]:8000
+    # - Vercel deployment: automatically configured via vercel.json
+    uvicorn.run(
+        app, 
+        host="0.0.0.0",  # Listen on all network interfaces
+        port=int(os.environ.get("PORT", 8000)),  # Use PORT env var or default to 8000
+        log_level="info",
+        access_log=True
+    )
