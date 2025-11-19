@@ -29,6 +29,9 @@ import iyzipay
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Vercel environment detection
+IS_VERCEL = os.environ.get('VERCEL') == '1'
+
 # Logging
 logging.basicConfig(
     level=logging.INFO,
@@ -46,13 +49,19 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 10080  # 7 days
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
-# Upload Directory
-UPLOAD_DIR = ROOT_DIR / 'uploads'
-UPLOAD_DIR.mkdir(exist_ok=True)
+# Upload Directory - Vercel için /tmp kullan
+if IS_VERCEL:
+    UPLOAD_DIR = Path('/tmp/uploads')
+else:
+    UPLOAD_DIR = ROOT_DIR / 'uploads'
+UPLOAD_DIR.mkdir(exist_ok=True, parents=True)
 
-# Data Directory
-DATA_DIR = ROOT_DIR / 'data'
-DATA_DIR.mkdir(exist_ok=True)
+# Data Directory - Vercel için /tmp kullan
+if IS_VERCEL:
+    DATA_DIR = Path('/tmp/data')
+else:
+    DATA_DIR = ROOT_DIR / 'data'
+DATA_DIR.mkdir(exist_ok=True, parents=True)
 
 # JSON Database Files
 USERS_FILE = DATA_DIR / 'users.json'
@@ -90,18 +99,21 @@ class PersistentDB:
                     logger.info(f"Loaded {len(data) if isinstance(data, (list, dict)) else 0} items from {filepath.name}")
                     return data
         except Exception as e:
-            logger.error(f"Error loading {filepath.name}: {e}")
+            logger.warning(f"Error loading {filepath.name}: {e}, using in-memory default")
         return default
     
     def _save_json(self, filepath: Path, data):
         """Save data to JSON file"""
         try:
             with file_lock:
+                # Ensure directory exists
+                filepath.parent.mkdir(parents=True, exist_ok=True)
                 with open(filepath, 'w', encoding='utf-8') as f:
                     json.dump(data, f, indent=2, ensure_ascii=False, default=str)
             logger.debug(f"Saved {len(data) if isinstance(data, (list, dict)) else 0} items to {filepath.name}")
         except Exception as e:
-            logger.error(f"Error saving {filepath.name}: {e}")
+            logger.warning(f"Error saving {filepath.name}: {e}, data will be in-memory only")
+            # Vercel'de dosya yazma başarısız olabilir, bu normal
     
     def _load_all(self):
         """Load all data from JSON files"""
@@ -1125,15 +1137,20 @@ async def update_return_status(
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
-    await connect_to_mongo()
-    
-    # Admin user already created in InMemoryDB.__init__
-    logger.info("In-memory database ready with default admin user")
+    try:
+        await connect_to_mongo()
+        logger.info("Database initialized")
+    except Exception as e:
+        logger.error(f"Startup error: {e}")
+        # Vercel'de dosya sistemi sorunları olabilir, devam et
     
     yield
     
     # Shutdown
-    await close_mongo_connection()
+    try:
+        await close_mongo_connection()
+    except Exception as e:
+        logger.error(f"Shutdown error: {e}")
 
 # Create FastAPI app
 app = FastAPI(
@@ -1155,8 +1172,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files for uploads
-app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+# Mount static files for uploads (Vercel'de çalışmaz)
+if not IS_VERCEL:
+    app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 # Root endpoint
 @app.get("/")
@@ -1170,4 +1188,4 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
